@@ -1,0 +1,3085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>TrendLine</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #ffffff 0%, #e3f2fd 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(90deg, #87ceeb 0%, #4fc3f7 100%);
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            animation: pulse 2s infinite;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .profile-btn, .chat-toggle {
+            background: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-btn:hover, .chat-toggle:hover {
+            transform: scale(1.1) rotate(5deg);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        /* Main Container */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 2rem;
+            animation: fadeInUp 1s ease-out;
+        }
+
+        .hero-section {
+            background: linear-gradient(45deg, #ffffff, #f0f9ff);
+            border-radius: 20px;
+            padding: 1.5rem 2rem;  /* Reduced from 2rem */
+            margin-bottom: 1.5rem; /* Reduced from 2rem */
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            animation: slideInLeft 1s ease-out;
+            text-align: center; /* ADD: Center align like home page */
+        }
+
+        .hero-title {
+            font-size: 2rem; /* Reduced from 2.5rem to match home */
+            margin-bottom: 0.5rem; /* Reduced from 1rem */
+            background: linear-gradient(45deg, #4fc3f7, #29b6f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 3s infinite;
+        }
+
+        .hero-section p {
+            font-size: 1rem; /* ADD: Match home page subtitle size */
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        /* Breaking News Ticker */
+        .breaking-news {
+            display: none; /* ADD: Hide if you want to match home page exactly */
+        }
+        /* OR reduce its prominence: */
+        .breaking-news {
+            background: #ff4444;
+            color: white;
+            padding: 0.4rem 1rem; /* Reduced padding */
+            border-radius: 10px;
+            margin-bottom: 1rem; /* Reduced from 2rem */
+            overflow: hidden;
+            position: relative;
+        }
+
+        .ticker-content {
+            animation: ticker 20s linear infinite;
+            white-space: nowrap;
+        }
+
+        /* Category Tabs */
+        .category-tabs {
+            display: flex;
+            gap: 0.8rem; /* Reduced from 1rem */
+            margin-bottom: 1.5rem; /* Reduced from 2rem */
+            flex-wrap: wrap;
+        }
+
+        .category-tab {
+            padding: 0.6rem 1.2rem; /* Reduced from 0.8rem 1.5rem */
+            background: white;
+            border: 2px solid #87ceeb;
+            border-radius: 20px; /* Reduced from 25px */
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.95rem; /* ADD: Match home page font size */
+            position: relative;
+            overflow: hidden;
+        }
+
+        .category-tab.active {
+            background: linear-gradient(45deg, #87ceeb, #4fc3f7);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(135, 206, 235, 0.4);
+        }
+
+        .category-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        /* News Grid */
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); /* Reduced from 350px */
+            gap: 1.2rem; /* Reduced from 1.5rem */
+            margin-bottom: 1.5rem; /* Reduced from 2rem */
+        }
+
+        .news-card {
+            background: white;
+            border-radius: 12px; /* Reduced from 15px */
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08); /* Lighter shadow */
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: cardSlideIn 0.6s ease-out forwards;
+            position: relative;
+        }
+
+        .news-card:hover {
+            transform: translateY(-8px); /* Reduced from -10px */
+            box-shadow: 0 12px 35px rgba(0,0,0,0.15); /* Match home page */
+        }
+
+        .news-card:nth-child(1) { animation-delay: 0.1s; }
+        .news-card:nth-child(2) { animation-delay: 0.2s; }
+        .news-card:nth-child(3) { animation-delay: 0.3s; }
+        .news-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .news-image {
+            width: 100%;
+            height: 180px; /* Reduced from 200px to match home */
+            background: linear-gradient(45deg, #e3f2fd, #bbdefb);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* REMOVE the news-image::before emoji - it's not in home page */
+        .news-image::before {
+            display: none; /* ADD: Remove the default emoji */
+        }
+
+        .news-content {
+            padding: 1.2rem; /* Reduced from 1.5rem */
+        }
+
+
+        .news-category {
+            background: linear-gradient(45deg, #87ceeb, #4fc3f7);
+            color: white;
+            padding: 0.25rem 0.7rem; /* Match home page exactly */
+            border-radius: 12px; /* Reduced from 15px */
+            font-size: 0.75rem; /* Reduced from 0.8rem */
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 0.8rem; /* Reduced from 1rem */
+        }
+
+        .news-title {
+            font-size: 1.1rem; /* Reduced from 1.2rem */
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .news-summary {
+            color: #666;
+            line-height: 1.5; /* Match home page */
+            margin-bottom: 0.8rem; /* Reduced from 1rem */
+            font-size: 0.95rem; /* ADD: Match home page */
+        }
+
+        .news-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.85rem; /* Reduced from 0.9rem */
+            color: #888;
+            margin-bottom: 0.8rem; /* ADD: Add spacing before read more */
+        }
+        
+        .read-more {
+            display: inline-block;
+            color: #4fc3f7;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .read-more:hover {
+            color: #29b6f6;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem; /* Reduced from 1.5rem */
+        }
+
+        .trending-section, .recent-section {
+            background: white;
+            border-radius: 15px;
+            padding: 1.2rem; /* Reduced from 1.5rem */
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+            animation: slideInRight 1s ease-out;
+        }
+
+        .section-title {
+            font-size: 1.2rem; /* Reduced from 1.3rem */
+            font-weight: 700;
+            margin-bottom: 0.8rem; /* Reduced from 1rem */
+            color: #333;
+            border-bottom: 3px solid #87ceeb;
+            padding-bottom: 0.5rem;
+        }
+
+        .trending-item, .recent-item {
+            padding: 0.8rem; /* Reduced from 1rem */
+            border-radius: 10px;
+            margin-bottom: 0.8rem; /* Reduced from 1rem */
+            background: #f8fbff;
+            border-left: 4px solid #87ceeb;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        /* Chat Board Styling */
+        .chat-board {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-board.active {
+            right: 0;
+        }
+
+        .chat-header {
+            background: linear-gradient(90deg, #87ceeb, #4fc3f7);
+            color: white;
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .chat-header h3 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .chat-toggle-btn {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .chat-toggle-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.1);
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 1rem;
+            overflow-y: auto;
+            background: linear-gradient(135deg, #f8fbff 0%, #e8f4fd 100%);
+            max-height: calc(100vh - 140px);
+        }
+
+        .chat-messages::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #87ceeb;
+            border-radius: 3px;
+        }
+
+        .chat-input-area {
+            padding: 1rem;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 0.5rem;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 0.8rem 1rem;
+            border: 2px solid #87ceeb;
+            border-radius: 25px;
+            outline: none;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            border-color: #4fc3f7;
+            box-shadow: 0 0 0 3px rgba(135, 206, 235, 0.2);
+        }
+
+        .chat-send {
+            background: linear-gradient(45deg, #87ceeb, #4fc3f7);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .chat-send:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(135, 206, 235, 0.4);
+        }
+
+        /* Message Styling */
+        .chat-message {
+            display: flex;
+            margin-bottom: 1rem;
+            align-items: flex-end;
+            gap: 0.5rem;
+            animation: messageSlideIn 0.3s ease-out;
+        }
+
+        .user-message {
+            flex-direction: row-reverse;
+        }
+
+        .bot-message {
+            flex-direction: row;
+        }
+
+        .message-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #87ceeb, #4fc3f7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .user-message .message-avatar {
+            background: linear-gradient(45deg, #4fc3f7, #29b6f6);
+        }
+
+        .message-content {
+            max-width: 75%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message-text {
+            background: white;
+            padding: 0.8rem 1rem;
+            border-radius: 18px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            word-wrap: break-word;
+            line-height: 1.4;
+        }
+
+        .user-message .message-text {
+            background: linear-gradient(135deg, #87ceeb, #4fc3f7);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .bot-message .message-text {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-time {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 0.3rem;
+            padding: 0 0.5rem;
+        }
+
+        .user-message .message-time {
+            text-align: right;
+        }
+
+        .bot-message .message-time {
+            text-align: left;
+        }
+
+        /* Typing Indicator */
+        .typing-indicator .message-text {
+            padding: 0.8rem 1rem;
+        }
+
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #87ceeb;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+
+        .typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+
+        /* Quick Actions */
+        .quick-actions {
+            background: rgba(135, 206, 235, 0.1);
+            padding: 1rem;
+            border-radius: 15px;
+            margin: 1rem 0;
+            border: 2px dashed #87ceeb;
+        }
+
+        .quick-actions-title {
+            font-weight: 600;
+            color: #4fc3f7;
+            margin-bottom: 0.8rem;
+            font-size: 0.9rem;
+        }
+
+        .quick-btn {
+            background: white;
+            border: 2px solid #87ceeb;
+            color: #4fc3f7;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            margin: 0.3rem 0.3rem 0 0;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .quick-btn:hover {
+            background: linear-gradient(45deg, #87ceeb, #4fc3f7);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(135, 206, 235, 0.3);
+        }
+
+        /* Error Message */
+        .error .message-text {
+            background: #ffebee !important;
+            color: #c62828 !important;
+            border-left: 4px solid #f44336;
+        }
+
+        /* Animations */
+        @keyframes messageSlideIn {
+            from { 
+                opacity: 0; 
+                transform: translateY(20px) scale(0.9); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0) scale(1); 
+            }
+        }
+
+        @keyframes typing {
+            0%, 80%, 100% { 
+                transform: scale(0);
+                opacity: 0.5;
+            }
+            40% { 
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .chat-board {
+                width: 100%;
+                right: -100%;
+            }
+            
+            .message-content {
+                max-width: 85%;
+            }
+            
+            .chat-input-area {
+                padding: 0.8rem;
+            }
+        }
+
+        /* User Profile Dropdown */
+        .profile-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 1rem;
+            min-width: 200px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .profile-dropdown.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .profile-item {
+            padding: 0.8rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .profile-item:hover {
+            background: #f0f9ff;
+            color: #4fc3f7;
+        }
+
+        /* Animations */
+        @keyframes slideDown {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(0); }
+        }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes cardSlideIn {
+            from { opacity: 0; transform: translateY(30px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        @keyframes ticker {
+            from { transform: translateX(100%); }
+            to { transform: translateX(-100%); }
+        }
+
+        /* 8. RESPONSIVE - Update breakpoints to match home */
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                padding: 1.5rem; /* Reduced */
+            }
+            
+            .sidebar {
+                order: -1; /* ADD: Show sidebar first on mobile like home page */
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                padding: 1rem; /* Match home page mobile padding */
+            }
+            
+            .hero-title {
+                font-size: 2rem;
+            }
+            
+            .news-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .category-tabs {
+                justify-content: flex-start; /* ADD: Match home page alignment */
+            }
+        }
+        
+        /* Prompt Box */
+
+        /* Cartoon Container */
+        .cartoon-container {
+            text-align: center;
+            margin: 0 0 1.5rem; /* Match home page: no top margin */
+            animation: bounceIn 1.5s ease-out;
+        }
+
+        .cartoon-img {
+            width: 100px; /* Reduced from 120px to match home */
+            height: auto;
+            animation: float 3s ease-in-out infinite;
+            opacity: 0.9;
+        }
+
+        .cartoon-text {
+            margin-top: 0.5rem; /* Reduced from 10px */
+            font-size: 1.1rem; /* Reduced from 1.2rem */
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+
+        /* Float animation for image */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Bounce In effect */
+        @keyframes bounceIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            60% { transform: scale(1.1); opacity: 1; }
+            100% { transform: scale(1); }
+        }
+
+        /* Profile Board (Sidebar) */
+        .profile-board {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            box-shadow: -5px 0 20px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            z-index: 202;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .profile-board.active {
+            right: 0;
+        }
+
+        /* Overlay for profile board */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 201;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Profile form styling */
+        .profile-form {
+            padding: 1rem;
+        }
+
+        .profile-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #495057;
+        }
+
+        .profile-form input,
+        .profile-form textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .profile-form input:focus,
+        .profile-form textarea:focus {
+            outline: none;
+            border-color: #4fc3f7;
+            box-shadow: 0 0 0 3px rgba(135, 206, 235, 0.2);
+        }
+
+        .profile-form textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .save-profile-btn {
+            background: linear-gradient(45deg, #87ceeb, #4fc3f7);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .save-profile-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(135, 206, 235, 0.4);
+        }
+
+        /* Avatar Styles */
+        .profile-avatar-section {
+            text-align: center;
+            padding: 2rem 1rem 1rem;
+            border-bottom: 1px solid #e9ecef;
+            background: linear-gradient(135deg, #f8fbff 0%, #e8f4fd 100%);
+        }
+
+        .avatar-container {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 1rem;
+        }
+
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #87ceeb;
+            box-shadow: 0 4px 15px rgba(135, 206, 235, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .profile-avatar:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(135, 206, 235, 0.4);
+        }
+
+        .avatar-upload-btn {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #87ceeb, #4fc3f7);
+            border: 3px solid white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        .avatar-upload-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        }
+
+        .avatar-upload-input {
+            display: none;
+        }
+
+        .profile-user-name {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-user-email {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-status {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            background: rgba(135, 206, 235, 0.2);
+            color: #4fc3f7;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        /* Avatar Options */
+        .avatar-options {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .avatar-option {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid #e9ecef;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            background: white;
+        }
+
+        .avatar-option:hover {
+            border-color: #87ceeb;
+            transform: scale(1.1);
+        }
+
+        .avatar-option.selected {
+            border-color: #4fc3f7;
+            box-shadow: 0 0 0 3px rgba(135, 206, 235, 0.3);
+        }
+
+        /* Dashboard Premium Theme Overrides */
+        :root {
+            --dash-bg-0: #060a1a;
+            --dash-bg-1: #0f1b45;
+            --dash-bg-2: #1f357a;
+            --dash-surface: #ffffff;
+            --dash-surface-soft: #f5f8ff;
+            --dash-text: #0f172a;
+            --dash-text-soft: #5a667f;
+            --dash-line: #dfe7fb;
+            --dash-brand: #4f7cff;
+            --dash-brand-strong: #2f5ee6;
+            --dash-shadow: 0 16px 40px rgba(6, 20, 54, 0.12);
+            --dash-radius-lg: 18px;
+            --dash-radius-md: 14px;
+        }
+
+        body {
+            font-family: "Inter", "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--dash-text);
+            background:
+                radial-gradient(1200px 520px at 8% -12%, rgba(33, 212, 253, 0.18), transparent 45%),
+                radial-gradient(980px 500px at 96% 10%, rgba(124, 58, 237, 0.14), transparent 52%),
+                linear-gradient(145deg, #edf3ff 0%, #f6f9ff 40%, #edf3ff 100%);
+            min-height: 100vh;
+        }
+
+        .header {
+            padding: 0.85rem 1.5rem;
+            background: rgba(9, 15, 38, 0.82);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(12px);
+            box-shadow: 0 10px 22px rgba(5, 12, 32, 0.2);
+            animation: none;
+        }
+
+        .nav-container {
+            max-width: 100%;
+            margin: 0;
+        }
+
+        .logo {
+            font-size: 1.85rem;
+            color: #eaf0ff;
+            text-shadow: none;
+            animation: none;
+            letter-spacing: 0.02em;
+        }
+
+        .profile-btn,
+        .chat-toggle {
+            width: 46px;
+            height: 46px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.12);
+            color: #f3f7ff;
+            box-shadow: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .profile-btn:hover,
+        .chat-toggle:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 16px rgba(4, 12, 34, 0.2);
+        }
+
+        .breaking-news {
+            background: linear-gradient(90deg, #e53935 0%, #ff7043 100%);
+            border-radius: 0;
+            margin-bottom: 0;
+        }
+
+        .main-container {
+            max-width: 100%;
+            margin: 0;
+            padding: 1.4rem clamp(16px, 2.2vw, 30px) 2rem;
+            grid-template-columns: minmax(0, 1fr) 330px;
+            gap: 1.2rem;
+            animation: none;
+            align-items: start;
+        }
+
+        .main-container main {
+            min-width: 0;
+        }
+
+        .hero-section {
+            background: linear-gradient(155deg, #0a1230 0%, #15275f 55%, #1f357a 100%);
+            border: 1px solid rgba(124, 152, 243, 0.38);
+            color: #eaf0ff;
+            border-radius: var(--dash-radius-lg);
+            box-shadow: 0 16px 32px rgba(5, 12, 34, 0.22);
+            padding: 1.2rem 1.6rem;
+            margin-bottom: 1rem;
+            animation: none;
+            text-align: left;
+        }
+
+        .hero-title {
+            color: #f7f9ff;
+            background: linear-gradient(90deg, #ffffff 0%, #bfd0ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.35rem;
+            animation: none;
+        }
+
+        .hero-section p {
+            color: rgba(234, 240, 255, 0.9);
+            margin-bottom: 0;
+        }
+
+        .category-tabs {
+            gap: 0.65rem;
+            margin-bottom: 1rem;
+        }
+
+        .category-tab {
+            border: 1px solid #cad8ff;
+            border-radius: 999px;
+            background: #ffffff;
+            color: #1c2c4b;
+            padding: 0.56rem 1.05rem;
+            font-size: 0.9rem;
+            transition: all 0.25s ease;
+        }
+
+        .category-tab:hover {
+            border-color: #9eb8ff;
+            box-shadow: 0 8px 16px rgba(79, 124, 255, 0.16);
+            transform: translateY(-1px);
+        }
+
+        .category-tab.active {
+            border-color: transparent;
+            background: linear-gradient(135deg, var(--dash-brand) 0%, var(--dash-brand-strong) 100%);
+            color: #fff;
+            box-shadow: 0 12px 18px rgba(79, 124, 255, 0.28);
+            transform: translateY(-1px);
+        }
+
+        .cartoon-container {
+            padding: 1rem;
+            border-radius: var(--dash-radius-md);
+            border: 1px dashed #cbd8ff;
+            background: #ffffff;
+            margin-bottom: 1rem;
+            animation: none;
+        }
+
+        .cartoon-text {
+            color: #3f4f6a;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .news-grid {
+            grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: stretch;
+        }
+
+        .news-card {
+            background: var(--dash-surface);
+            border: 1px solid #e2e9fb;
+            border-radius: var(--dash-radius-md);
+            box-shadow: var(--dash-shadow);
+            transform: none;
+            animation: cardSlideIn 0.5s ease-out forwards;
+            min-height: 460px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .news-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 36px rgba(11, 26, 66, 0.18);
+        }
+
+        .news-image {
+            height: 190px;
+            background: linear-gradient(135deg, #d4e2ff, #c2d4ff);
+        }
+
+        .news-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.35s ease;
+        }
+
+        .news-card:hover .news-image img {
+            transform: scale(1.05);
+        }
+
+        .news-content {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .news-category {
+            background: #eaf0ff;
+            color: #2f5ee6;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+            padding: 0.28rem 0.72rem;
+        }
+
+        .news-title {
+            font-size: 1.07rem;
+            line-height: 1.42;
+            margin-bottom: 0.2rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: calc(1.42em * 3);
+        }
+
+        .news-summary {
+            color: var(--dash-text-soft);
+            font-size: 0.95rem;
+            line-height: 1.55;
+            margin-bottom: 0.2rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            min-height: calc(1.55em * 4);
+        }
+
+        .news-meta {
+            color: #7482a0;
+            font-size: 0.8rem;
+            margin-top: auto;
+        }
+
+        .read-more {
+            color: var(--dash-brand-strong);
+            font-weight: 700;
+            font-size: 0.93rem;
+        }
+
+        .read-more:hover {
+            color: #1f49c6;
+        }
+
+        .sidebar {
+            gap: 1rem;
+            position: sticky;
+            top: 88px;
+            align-self: start;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #b9c9f7;
+            border-radius: 999px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .trending-section,
+        .recent-section {
+            background: #ffffff;
+            border-radius: var(--dash-radius-md);
+            border: 1px solid #e2e9fb;
+            box-shadow: var(--dash-shadow);
+            padding: 1rem;
+            animation: none;
+        }
+
+        .section-title {
+            color: #1b2a49;
+            font-size: 1.08rem;
+            border-bottom: 1px solid #d6e2ff;
+            padding-bottom: 0.55rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .trending-item,
+        .recent-item {
+            border-left: 3px solid #7ba0ff;
+            background: #f6f9ff;
+            border-radius: 10px;
+            margin-bottom: 0.7rem;
+            padding: 0.7rem;
+            transition: all 0.25s ease;
+        }
+
+        .trending-item:hover,
+        .recent-item:hover {
+            background: #edf3ff;
+            transform: translateX(4px);
+        }
+
+        .trending-item h4,
+        .recent-item h4 {
+            color: #13284e;
+            margin-bottom: 0.28rem;
+            font-size: 0.95rem;
+            line-height: 1.35;
+        }
+
+        .trending-item p,
+        .recent-item p {
+            color: #5a667f;
+            font-size: 0.86rem;
+            line-height: 1.45;
+        }
+
+        .chat-board,
+        .profile-board {
+            width: 410px;
+            background: #f8faff;
+            border-left: 1px solid #dce6ff;
+            box-shadow: -10px 0 34px rgba(8, 20, 54, 0.18);
+        }
+
+        .chat-header {
+            background: linear-gradient(135deg, #111c45 0%, #223f92 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+            box-shadow: none;
+        }
+
+        .chat-toggle-btn {
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.22);
+        }
+
+        .chat-toggle-btn:hover {
+            background: rgba(255, 255, 255, 0.22);
+            transform: translateY(-1px);
+        }
+
+        .chat-board .chat-messages {
+            background: linear-gradient(180deg, #f5f8ff 0%, #edf3ff 100%);
+        }
+
+        .profile-board .chat-messages {
+            background: #f8faff;
+        }
+
+        .chat-input-area {
+            border-top: 1px solid #d9e5ff;
+            background: #fff;
+        }
+
+        .chat-input {
+            border: 1px solid #cad9ff;
+            border-radius: 12px;
+            background: #fbfcff;
+        }
+
+        .chat-input:focus {
+            border-color: #8aa9ff;
+            box-shadow: 0 0 0 3px rgba(79, 124, 255, 0.16);
+        }
+
+        .chat-send {
+            border-radius: 12px;
+            padding: 0.78rem 1.2rem;
+            background: linear-gradient(135deg, var(--dash-brand) 0%, var(--dash-brand-strong) 100%);
+            box-shadow: 0 10px 18px rgba(47, 94, 230, 0.25);
+        }
+
+        .chat-send:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 22px rgba(47, 94, 230, 0.32);
+        }
+
+        .message-avatar {
+            background: linear-gradient(135deg, #4f7cff, #2f5ee6);
+            color: #fff;
+        }
+
+        .user-message .message-avatar {
+            background: linear-gradient(135deg, #42526d, #273755);
+        }
+
+        .message-text {
+            border: 1px solid #e3ebff;
+            box-shadow: none;
+        }
+
+        .user-message .message-text {
+            background: linear-gradient(135deg, #4f7cff, #2f5ee6);
+            color: #fff;
+            border: none;
+        }
+
+        .profile-dropdown {
+            border: 1px solid #dde7ff;
+            box-shadow: 0 14px 28px rgba(8, 20, 52, 0.16);
+            border-radius: 12px;
+        }
+
+        .profile-item:hover {
+            background: #eef4ff;
+            color: #2f5ee6;
+        }
+
+        .overlay {
+            background: rgba(6, 12, 32, 0.56);
+        }
+
+        .profile-avatar-section {
+            background: linear-gradient(180deg, #eef4ff 0%, #e6efff 100%);
+            border-bottom: 1px solid #dbe6ff;
+        }
+
+        .profile-avatar {
+            border-color: #7d9eff;
+            box-shadow: 0 8px 20px rgba(79, 124, 255, 0.22);
+        }
+
+        .profile-user-name {
+            color: #16284d;
+        }
+
+        .profile-user-email {
+            color: #5d6982;
+        }
+
+        .profile-status {
+            background: #e7eeff;
+            color: #355fbf;
+        }
+
+        .profile-form label {
+            color: #34445f;
+            font-size: 0.9rem;
+        }
+
+        .profile-form input,
+        .profile-form textarea {
+            border: 1px solid #d3def7;
+            background: #ffffff;
+        }
+
+        .profile-form input:focus,
+        .profile-form textarea:focus {
+            border-color: #8ca8ff;
+            box-shadow: 0 0 0 3px rgba(79, 124, 255, 0.14);
+        }
+
+        .save-profile-btn {
+            border-radius: 10px;
+            background: linear-gradient(135deg, #4f7cff 0%, #2f5ee6 100%);
+            box-shadow: 0 12px 22px rgba(47, 94, 230, 0.25);
+        }
+
+        .save-profile-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 16px 24px rgba(47, 94, 230, 0.3);
+        }
+
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                padding: 1rem 16px 1.5rem;
+            }
+
+            .sidebar {
+                order: 2;
+                position: static;
+                top: auto;
+                max-height: none;
+                overflow: visible;
+                padding-right: 0;
+            }
+
+            .chat-board,
+            .profile-board {
+                width: 100%;
+                right: -100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 0.75rem 0.85rem;
+            }
+
+            .logo {
+                font-size: 1.45rem;
+            }
+
+            .nav-right {
+                gap: 0.55rem;
+            }
+
+            .profile-btn,
+            .chat-toggle {
+                width: 40px;
+                height: 40px;
+                border-radius: 10px;
+            }
+
+            .hero-section {
+                padding: 1rem 0.9rem;
+            }
+
+            .hero-title {
+                font-size: 1.52rem;
+            }
+
+            .category-tabs {
+                gap: 0.45rem;
+            }
+
+            .category-tab {
+                font-size: 0.82rem;
+                padding: 0.45rem 0.85rem;
+            }
+
+            .news-card {
+                min-height: auto;
+            }
+
+            .news-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="nav-container">
+            <div class="logo">📰 TrendLine</div>
+            <div class="nav-right">
+                <button class="chat-toggle" onclick="toggleChat()">💬</button>
+                <div style="position: relative;">
+                    <button class="profile-btn" onclick="toggleProfile()">👤</button>
+                    <div class="profile-dropdown" id="profileDropdown">
+                        <div class="profile-item" onclick="openProfileSidebar()">👤 My Profile</div>
+                        <div class="profile-item" onclick="document.getElementById('logoutForm').submit()">🚪 Logout</div>
+                    </div>
+                    <form id="logoutForm" method="POST" action="{% url 'logout' %}" style="display:none;">
+                        {% csrf_token %}
+                    </form>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Overlay for Profile Board -->
+<div class="overlay" id="overlay" onclick="closeProfileSidebar()"></div>
+
+<!-- Profile Board -->
+<!-- Profile Board -->
+<div class="profile-board" id="profileBoard">
+    <div class="chat-header">
+        <h3>👤 My Profile</h3>
+        <button class="chat-toggle-btn" onclick="closeProfileSidebar()">✖</button>
+    </div>
+    
+    <!-- Avatar Section -->
+    <div class="profile-avatar-section">
+        <div class="avatar-container">
+            <img src="https://via.placeholder.com/120x120/87ceeb/ffffff?text=👤" 
+                 alt="Profile Avatar" 
+                 class="profile-avatar" 
+                 id="profileAvatarImg">
+            <button class="avatar-upload-btn" onclick="document.getElementById('avatarUpload').click()">
+                📷
+            </button>
+            <input type="file" 
+                   id="avatarUpload" 
+                   class="avatar-upload-input" 
+                   accept="image/*" 
+                   onchange="handleAvatarUpload(event)">
+        </div>
+        
+        <div class="profile-user-name" id="displayUserName">John Doe</div>
+        <div class="profile-user-email" id="displayUserEmail">john.doe@example.com</div>
+        <div class="profile-status">🟢 Online</div>
+        
+    </div>
+    
+    <div class="chat-messages">
+        <div class="profile-form">
+            <label for="profileName">Name:</label>
+            <input type="text" id="profileName" placeholder="Your Name" value="John Doe" onchange="updateDisplayName()">
+            
+            <label for="profileEmail">Email:</label>
+            <input type="email" id="profileEmail" placeholder="Your Email" value="john.doe@example.com" onchange="updateDisplayEmail()">
+            
+            <label for="profileContact">Contact:</label>
+            <input type="text" id="profileContact" placeholder="Your Contact Number" value="">
+            
+            <label for="profileBio">Bio:</label>
+            <textarea id="profileBio" placeholder="Write something about yourself..."></textarea>
+            
+            <button class="save-profile-btn" onclick="saveProfile()">💾 Save Profile</button>
+        </div>
+    </div>
+</div>
+    <!-- Breaking News Ticker -->
+    <div class="breaking-news">
+        <div class="ticker-content">
+            🔴 BREAKING: Latest updates from around the world • Tech giants announce new innovations • Sports championship results • Weather updates for your region
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Main Content -->
+        <main>
+            <!-- Hero Section -->
+            <section class="hero-section">
+                <h1 class="hero-title">Welcome to Your News Dashboard</h1>
+                <p>Stay updated with the latest news from around the world, personalized just for you.</p>
+            </section>
+  
+
+            <!-- Category Tabs -->
+            <div class="category-tabs">
+                {% comment %} <div class="category-tab" onclick="filterCategory('all')">All</div> {% endcomment %}
+                <div class="category-tab" onclick="filterCategory('politics')">Politics</div>
+                <div class="category-tab" onclick="filterCategory('bollywood')">Bollywood</div>
+                <div class="category-tab" onclick="filterCategory('sports')">Sports</div>
+                <div class="category-tab" onclick="filterCategory('technology')">Technology</div>
+                <div class="category-tab" onclick="filterCategory('business')">Business</div>
+                <div class="category-tab" onclick="filterCategory('health')">Health</div>
+                <div class="category-tab" onclick="filterCategory('international')">International</div>
+                <div class="category-tab" onclick="filterCategory('science')">Science</div>
+                <div class="category-tab" onclick="filterCategory('environment')">Environment</div>
+                <div class="category-tab" onclick="filterCategory('education')">Education</div>
+                <div class="category-tab" onclick="filterCategory('lifestyle')">Lifestyle</div>
+            </div>
+<div class="cartoon-container">
+    <img src="https://cdn-icons-png.flaticon.com/512/599/599502.png" alt="Search Cartoon" class="cartoon-img">
+    <p class="cartoon-text">🔎 Pick a category & discover today’s news!</p>
+</div>
+            <!-- News Grid -->
+<section id="newsGrid" class="news-grid">
+    <!-- News will load here dynamically -->
+</section>
+
+            <!-- News Grid -->
+          
+        </main>
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <!-- Trending Section -->
+            <section class="trending-section">
+                <h2 class="section-title">🔥 Trending Now</h2>
+                <div class="trending-item">
+                    <h4>Election Results Analysis</h4>
+                    <p>Comprehensive breakdown of recent electoral outcomes</p>
+                </div>
+                <div class="trending-item">
+                    <h4>Celebrity Wedding Buzz</h4>
+                    <p>Bollywood's most talked-about union of the year</p>
+                </div>
+                <div class="trending-item">
+                    <h4>Tech Innovation Summit</h4>
+                    <p>Industry leaders showcase cutting-edge technologies</p>
+                </div>
+            </section>
+
+            <!-- Recent Activity -->
+            <section class="recent-section">
+                <h2 class="section-title">⏰ Recent Updates</h2>
+                <div class="recent-item">
+                    <h4>Market Analysis</h4>
+                    <p>Daily financial roundup and investment insights</p>
+                </div>
+                <div class="recent-item">
+                    <h4>Weather Alert</h4>
+                    <p>Storm warning issued for coastal regions</p>
+                </div>
+                <div class="recent-item">
+                    <h4>Sports Highlights</h4>
+                    <p>Today's top plays and match results</p>
+                </div>
+            </section>
+        </aside>
+    </div>
+
+    <!-- Chat Board -->
+<div class="chat-board" id="chatBoard">
+    <div class="chat-header">
+        <h3>💬 News Chat</h3>
+        <button class="chat-toggle-btn" onclick="toggleChat()" id="chatToggleBtn">X</button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <div style="padding: 1rem; text-align: center; color: #666;">
+            Welcome to TrendLine Chat! Discuss the latest news with other readers.
+        </div>
+    </div>
+    <div class="chat-input-area">
+        <input type="text" class="chat-input" placeholder="Type your message..." id="chatInput" onkeypress="handleEnter(event)">
+
+    <script>
+
+async function loadSidebarData() {
+    console.log('Loading sidebar data...');
+    
+    try {
+        const response = await fetch('/api/sidebar/');
+        if (!response.ok) {
+            throw new Error(`Network response was not ok: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('API Response:', data);
+
+        if (data.status === 'ok' && data.sidebar) {
+            // Handle trending news
+            if (Array.isArray(data.sidebar.trending) && data.sidebar.trending.length > 0) {
+                console.log('Trending items:', data.sidebar.trending.length);
+                populateTrending(data.sidebar.trending);
+            } else {
+                console.log('No trending data');
+                populateTrending([]);
+            }
+
+            // Handle recent news
+            if (Array.isArray(data.sidebar.recent) && data.sidebar.recent.length > 0) {
+                console.log('Recent items:', data.sidebar.recent.length);
+                populateRecent(data.sidebar.recent);
+            } else {
+                console.log('No recent data');
+                populateRecent([]);
+            }
+        }
+    } catch (error) {
+        console.error('Error loading sidebar:', error);
+        showSidebarError();
+    }
+}
+
+
+function populateTrending(trendingNews) {
+    const trendingSection = document.querySelector('.trending-section');
+    
+    // Clear existing content except title
+    const existingItems = trendingSection.querySelectorAll('.trending-item');
+    existingItems.forEach(item => item.remove());
+    
+    // Check if we have trending news
+    if (!trendingNews || !Array.isArray(trendingNews) || trendingNews.length === 0) {
+        // Add a "no content" message
+        const noContentItem = document.createElement('div');
+        noContentItem.className = 'trending-item no-content';
+        noContentItem.innerHTML = '<p>No trending news available at the moment.</p>';
+        trendingSection.appendChild(noContentItem);
+        return;
+    }
+    
+    // Rest of your existing code...
+    trendingNews.forEach(article => {
+        const trendingItem = document.createElement('div');
+        trendingItem.className = 'trending-item';
+        trendingItem.innerHTML = `
+            <h4><a href="${article.url}" target="_blank" rel="noopener noreferrer">${article.title}</a></h4>
+            <p>${article.description}</p>
+            <small class="source">${article.source}</small>
+        `;
+        trendingSection.appendChild(trendingItem);
+    });
+}
+
+function populateRecent(recentNews) {
+    const recentSection = document.querySelector('.recent-section');
+    
+    // Clear existing content except title
+    const existingItems = recentSection.querySelectorAll('.recent-item');
+    existingItems.forEach(item => item.remove());
+    
+    // Add new recent items
+    recentNews.forEach(article => {
+        const recentItem = document.createElement('div');
+        recentItem.className = 'recent-item';
+        recentItem.innerHTML = `
+            <h4><a href="${article.url}" target="_blank" rel="noopener noreferrer">${article.title}</a></h4>
+            <p>${article.description}</p>
+            <small class="date-source">${article.publishedAt} • ${article.source}</small>
+        `;
+        recentSection.appendChild(recentItem);
+    });
+}
+
+function showSidebarError() {
+    const trendingSection = document.querySelector('.trending-section');
+    const recentSection = document.querySelector('.recent-section');
+    
+    const errorMsg = '<div class="error-item"><p>Unable to load latest news. Please try again later.</p></div>';
+    
+    trendingSection.innerHTML += errorMsg;
+    recentSection.innerHTML += errorMsg;
+}
+
+// Alternative: Load trending and recent separately
+async function loadSidebarDataSeparately() {
+    try {
+        // Load trending news
+        const trendingResponse = await fetch('/api/trending/');
+        if (trendingResponse.ok) {
+            const trendingData = await trendingResponse.json();
+            if (trendingData.status === 'ok') {
+                populateTrending(trendingData.trending || []);
+            } else {
+                populateTrending([]);
+            }
+        } else {
+            console.error('Failed to fetch trending news');
+            populateTrending([]);
+        }
+        
+        // Load recent news
+        const recentResponse = await fetch('/api/recent/');
+        if (recentResponse.ok) {
+            const recentData = await recentResponse.json();
+            if (recentData.status === 'ok') {
+                populateRecent(recentData.recent || []);
+            } else {
+                populateRecent([]);
+            }
+        } else {
+            console.error('Failed to fetch recent news');
+            populateRecent([]);
+        }
+        
+    } catch (error) {
+        console.error('Error loading sidebar data separately:', error);
+        showSidebarError();
+    }
+}
+
+// Updated populate functions with better error handling
+function populateTrending(trendingNews) {
+    const trendingSection = document.querySelector('.trending-section');
+    if (!trendingSection) {
+        console.error('Trending section not found');
+        return;
+    }
+    
+    // Remove existing trending items (but keep the title)
+    const existingItems = trendingSection.querySelectorAll('.trending-item');
+    existingItems.forEach(item => item.remove());
+
+    if (!Array.isArray(trendingNews) || trendingNews.length === 0) {
+        const noContentItem = document.createElement('div');
+        noContentItem.className = 'trending-item no-content';
+        noContentItem.innerHTML = '<p>No trending news available at the moment.</p>';
+        trendingSection.appendChild(noContentItem);
+        return;
+    }
+
+    trendingNews.forEach((article, index) => {
+        if (index >= 6) return; // Limit to 6 items
+        
+        const trendingItem = document.createElement('div');
+        trendingItem.className = 'trending-item';
+        
+        const title = article.title || "Untitled";
+        const description = article.description || "No description available.";
+        const url = article.url || "#";
+        const source = article.source || "Unknown Source";
+        
+        trendingItem.innerHTML = `
+            <h4>
+                <a href="${url}" target="_blank" rel="noopener noreferrer" title="${title}">
+                    ${title.length > 60 ? title.substring(0, 60) + '...' : title}
+                </a>
+            </h4>
+            <p>${description}</p>
+            <small class="source">${source}</small>
+        `;
+        
+        trendingSection.appendChild(trendingItem);
+    });
+    
+    console.log(`Populated ${trendingNews.length} trending items`);
+}
+
+function populateRecent(recentNews) {
+    const recentSection = document.querySelector('.recent-section');
+    if (!recentSection) {
+        console.error('Recent section not found');
+        return;
+    }
+    
+    // Clear existing content except title
+    const existingItems = recentSection.querySelectorAll('.recent-item');
+    existingItems.forEach(item => item.remove());
+    
+    if (!Array.isArray(recentNews) || recentNews.length === 0) {
+        const noContentItem = document.createElement('div');
+        noContentItem.className = 'recent-item no-content';
+        noContentItem.innerHTML = '<p>No recent news available.</p>';
+        recentSection.appendChild(noContentItem);
+        return;
+    }
+    
+    // Add new recent items
+    recentNews.forEach((article, index) => {
+        if (index >= 6) return; // Limit to 6 items
+        
+        const recentItem = document.createElement('div');
+        recentItem.className = 'recent-item';
+        
+        const title = article.title || "Untitled";
+        const description = article.description || "No description available.";
+        const url = article.url || "#";
+        const source = article.source || "Unknown";
+        const publishedAt = formatDate(article.publishedAt);
+        
+        recentItem.innerHTML = `
+            <h4>
+                <a href="${url}" target="_blank" rel="noopener noreferrer" title="${title}">
+                    ${title.length > 50 ? title.substring(0, 50) + '...' : title}
+                </a>
+            </h4>
+            <p>${description}</p>
+            <small class="date-source">${publishedAt} • ${source}</small>
+        `;
+        recentSection.appendChild(recentItem);
+    });
+    
+    console.log(`Populated ${recentNews.length} recent items`);
+}
+
+function showSidebarError() {
+    const trendingSection = document.querySelector('.trending-section');
+    const recentSection = document.querySelector('.recent-section');
+    
+    const errorMsg = '<div class="error-item"><p>Unable to load news. Please try again later.</p></div>';
+    
+    if (trendingSection) {
+        trendingSection.innerHTML += errorMsg;
+    }
+    if (recentSection) {
+        recentSection.innerHTML += errorMsg;
+    }
+}
+
+// Helper function to format date
+function formatDate(dateString) {
+    if (!dateString) return 'Unknown date';
+    
+    try {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffTime = Math.abs(now - date);
+        const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
+        
+        if (diffHours < 1) return 'Just now';
+        if (diffHours < 24) return `${diffHours}h ago`;
+        
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays < 7) return `${diffDays}d ago`;
+        
+        return date.toLocaleDateString();
+    } catch (e) {
+        return 'Recently';
+    }
+}
+
+// Initialize when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Loading sidebar data...');
+    
+    // Use either method - choose one:
+    loadSidebarData(); // Method 1: Combined endpoint (recommended)
+    // loadSidebarDataSeparately(); // Method 2: Separate endpoints
+});
+
+// Refresh sidebar data periodically (every 10 minutes)
+setInterval(() => {
+    console.log('Refreshing sidebar data...');
+    loadSidebarData();
+}, 10 * 60 * 1000);
+
+// Load sidebar data when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    loadSidebarData();
+});
+
+// Optional: Refresh sidebar data periodically (every 30 minutes)
+setInterval(loadSidebarData, 30 * 60 * 1000);
+        // Category filtering functionality
+       // Profile dropdown toggle
+
+// Frontend JavaScript for News Chatbot
+
+// TrendLine News Chatbot - Complete Script
+let chatVisible = false;
+let chatInitialized = false;
+
+function toggleChat() {
+    const chatBoard = document.getElementById('chatBoard');
+    
+    if (!chatBoard) {
+        console.error('Chat board element not found!');
+        return;
+    }
+    
+    chatBoard.classList.toggle('active');
+    chatVisible = !chatVisible;
+    
+    if (chatVisible) {
+        chatBoard.style.display = 'flex';
+        chatBoard.style.animation = 'slideUp 0.3s ease-out';
+        
+        if (!chatInitialized) {
+            initializeChat();
+        }
+        
+        setTimeout(() => {
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.focus();
+            }
+        }, 300);
+    } else {
+        chatBoard.style.animation = 'slideDown 0.3s ease-in';
+        setTimeout(() => {
+            chatBoard.style.display = 'none';
+        }, 300);
+    }
+}
+
+function initializeChat() {
+    chatInitialized = true;
+    
+    setTimeout(() => {
+        addMessageToChat(
+            "👋 **Welcome to TrendLine News Chat!**\n\nI can help you with:\n• 🔥 Trending news\n• ⚽ Sports updates\n• 🎬 Bollywood gossip\n• 💻 Tech news\n• 💼 Business updates\n• 🏥 Health news\n\nJust ask me about any topic!",
+            'bot'
+        );
+        addQuickActions();
+    }, 500);
+}
+
+function handleEnter(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        sendMessage();
+    }
+}
+
+async function sendMessage() {
+    const chatInput = document.getElementById('chatInput');
+    const message = chatInput.value.trim();
+    
+    if (!message) return;
+    
+    chatInput.disabled = true;
+    addMessageToChat(message, 'user');
+    chatInput.value = '';
+    showTypingIndicator();
+    
+    try {
+        const response = await fetch('/api/chat/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                message: message
+            })
+        });
+        
+        removeTypingIndicator();
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            addMessageToChat(data.bot_response, 'bot');
+        } else {
+            addMessageToChat(
+                `❌ Sorry, I encountered an error: ${data.message || 'Unknown error'}. Please try again.`,
+                'bot',
+                true
+            );
+        }
+        
+    } catch (error) {
+        console.error('Chat error:', error);
+        removeTypingIndicator();
+        
+        let errorMessage = '❌ Sorry, I\'m having trouble connecting. ';
+        
+        if (error.message.includes('Failed to fetch')) {
+            errorMessage += 'Please check your internet connection and try again.';
+        } else if (error.message.includes('403')) {
+            errorMessage += 'It seems there\'s an API access issue. Please contact support.';
+        } else if (error.message.includes('429')) {
+            errorMessage += 'Too many requests. Please wait a moment and try again.';
+        } else {
+            errorMessage += 'Please try again later.';
+        }
+        
+        addMessageToChat(errorMessage, 'bot', true);
+    } finally {
+        chatInput.disabled = false;
+        chatInput.focus();
+    }
+}
+
+function addMessageToChat(message, sender, isError = false) {
+    const chatMessages = document.getElementById('chatMessages');
+    
+    const welcomeMsg = chatMessages.querySelector('div[style*="text-align: center"]');
+    if (welcomeMsg) {
+        welcomeMsg.remove();
+    }
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}-message${isError ? ' error' : ''}`;
+    
+    const timestamp = new Date().toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    if (sender === 'user') {
+        messageDiv.innerHTML = `
+            <div class="message-content">
+                <div class="message-text">${escapeHtml(message)}</div>
+                <div class="message-time">${timestamp}</div>
+            </div>
+            <div class="message-avatar">👤</div>
+        `;
+    } else {
+        const formattedMessage = formatBotMessage(message);
+        messageDiv.innerHTML = `
+            <div class="message-avatar">${isError ? '⚠️' : '🤖'}</div>
+            <div class="message-content">
+                <div class="message-text">${formattedMessage}</div>
+                <div class="message-time">${timestamp}</div>
+            </div>
+        `;
+    }
+    
+    chatMessages.appendChild(messageDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    messageDiv.style.opacity = '0';
+    messageDiv.style.transform = 'translateY(20px)';
+    
+    requestAnimationFrame(() => {
+        messageDiv.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        messageDiv.style.opacity = '1';
+        messageDiv.style.transform = 'translateY(0)';
+    });
+}
+
+function formatBotMessage(message) {
+    let formatted = escapeHtml(message);
+    
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                         .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                         .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
+                         .replace(/\n/g, '<br>')
+                         .replace(/^• /gm, '<span class="bullet">•</span> ');
+    
+    return formatted;
+}
+
+function showTypingIndicator() {
+    const chatMessages = document.getElementById('chatMessages');
+    
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'chat-message bot-message typing-indicator';
+    typingDiv.id = 'typingIndicator';
+    
+    typingDiv.innerHTML = `
+        <div class="message-avatar">🤖</div>
+        <div class="message-content">
+            <div class="message-text">
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+                <span class="typing-text">Searching news...</span>
+            </div>
+        </div>
+    `;
+    
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function removeTypingIndicator() {
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
+}
+
+function addQuickActions() {
+    const chatMessages = document.getElementById('chatMessages');
+    const quickActions = document.createElement('div');
+    quickActions.className = 'quick-actions';
+    quickActions.innerHTML = `
+        <div class="quick-actions-title">💡 Try these:</div>
+        <div class="quick-buttons">
+            <button class="quick-btn trending" onclick="quickMessage('What\\'s trending today?')">
+                🔥 Trending
+            </button>
+            <button class="quick-btn sports" onclick="quickMessage('Latest sports news')">
+                ⚽ Sports
+            </button>
+            <button class="quick-btn entertainment" onclick="quickMessage('Bollywood updates')">
+                🎬 Bollywood
+            </button>
+            <button class="quick-btn technology" onclick="quickMessage('Technology news')">
+                💻 Tech
+            </button>
+            <button class="quick-btn business" onclick="quickMessage('Business news today')">
+                💼 Business
+            </button>
+            <button class="quick-btn health" onclick="quickMessage('Health news updates')">
+                🏥 Health
+            </button>
+        </div>
+    `;
+    
+    chatMessages.appendChild(quickActions);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function quickMessage(message) {
+    const chatInput = document.getElementById('chatInput');
+    chatInput.value = message;
+    sendMessage();
+    
+    const quickActions = document.querySelector('.quick-actions');
+    if (quickActions) {
+        quickActions.style.opacity = '0.5';
+        setTimeout(() => {
+            if (quickActions.parentNode) {
+                quickActions.parentNode.removeChild(quickActions);
+            }
+        }, 1000);
+    }
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+function getCsrfToken() {
+    let csrfToken = null;
+    
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (csrfInput) {
+        csrfToken = csrfInput.value;
+    }
+    
+    if (!csrfToken) {
+        const csrfMeta = document.querySelector('meta[name=csrf-token]');
+        if (csrfMeta) {
+            csrfToken = csrfMeta.getAttribute('content');
+        }
+    }
+    
+    if (!csrfToken) {
+        csrfToken = getCookie('csrftoken');
+    }
+    
+    return csrfToken;
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.profile-btn') && !e.target.closest('.profile-dropdown')) {
+        const dropdown = document.getElementById('profileDropdown');
+        if (dropdown) {
+            dropdown.classList.remove('active');
+        }
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('TrendLine News Chat initialized');
+    
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            toggleChat();
+        }
+        
+        if (e.key === 'Escape' && chatVisible) {
+            toggleChat();
+        }
+    });
+});
+
+function checkConnectionStatus() {
+    fetch('/api/chat/', {
+        method: 'HEAD'
+    }).then(response => {
+        if (response.ok) {
+            document.body.classList.remove('offline');
+        } else {
+            document.body.classList.add('offline');
+        }
+    }).catch(() => {
+        document.body.classList.add('offline');
+    });
+}
+
+setInterval(checkConnectionStatus, 30000);
+
+// Profile functionality
+// REPLACE ALL EXISTING PROFILE-RELATED JAVASCRIPT WITH THIS CODE
+// Add this script section to your HTML, replacing the old profile functions
+
+// Profile Database Integration Functions
+
+// Load user profile data from database on page load
+// Simplified Profile Management Script
+
+// Load user profile data from backend
+async function loadUserProfile() {
+    try {
+        const response = await fetch('/api/profile/', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            populateProfileForm(data.profile);
+            updateDisplayElements(data.profile);
+            console.log('Profile loaded successfully');
+        } else {
+            showMessage('Failed to load profile: ' + (data.message || 'Unknown error'), 'error');
+        }
+    } catch (error) {
+        console.error('Error loading profile:', error);
+        showMessage('Error loading profile data. Please refresh the page.', 'error');
+    }
+}
+
+// Populate form fields with profile data
+function populateProfileForm(profile) {
+    // Basic fields
+    setFieldValue('profileName', profile.name || '');
+    setFieldValue('profileEmail', profile.email || '');
+    setFieldValue('profileContact', profile.phone_number || '');
+    setFieldValue('profileBio', profile.bio || '');
+    
+    // Additional fields
+    setFieldValue('profileWebsite', profile.website || '');
+    setFieldValue('profileLocation', profile.location || '');
+    setFieldValue('profileBirthDate', profile.birth_date || '');
+    setFieldValue('profileGender', profile.gender || '');
+    
+    // Notification preferences
+    setCheckboxValue('emailNotifications', profile.email_notifications);
+    setCheckboxValue('smsNotifications', profile.sms_notifications);
+    setCheckboxValue('marketingEmails', profile.marketing_emails);
+}
+
+// Update display elements
+function updateDisplayElements(profile) {
+    setTextContent('displayUserName', profile.name || 'User');
+    setTextContent('displayUserEmail', profile.email || 'user@example.com');
+    
+    // Update avatar if exists
+    if (profile.avatar_url) {
+        const avatarImg = document.getElementById('profileAvatarImg');
+        if (avatarImg) {
+            avatarImg.src = profile.avatar_url;
+        }
+    }
+}
+
+// Save profile data
+async function saveProfile() {
+    const saveButton = document.querySelector('.save-profile-btn');
+    if (!saveButton) return;
+    
+    const originalText = saveButton.textContent;
+    
+    // Show loading state
+    saveButton.textContent = '💾 Saving...';
+    saveButton.disabled = true;
+    
+    try {
+        const profileData = collectProfileData();
+        
+        const response = await fetch('/api/profile/update/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify(profileData)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            updateDisplayElements(data.profile);
+            showMessage('Profile saved successfully!', 'success');
+        } else {
+            showMessage(data.message || 'Failed to save profile', 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error saving profile:', error);
+        showMessage('Error saving profile. Please try again.', 'error');
+    } finally {
+        // Reset button state
+        saveButton.textContent = originalText;
+        saveButton.disabled = false;
+    }
+}
+
+// Collect form data for saving
+function collectProfileData() {
+    const fullName = getFieldValue('profileName') || '';
+    const nameParts = fullName.trim().split(' ');
+    
+    return {
+        first_name: nameParts[0] || '',
+        last_name: nameParts.slice(1).join(' ') || '',
+        email: getFieldValue('profileEmail') || '',
+        phone_number: getFieldValue('profileContact') || '',
+        bio: getFieldValue('profileBio') || '',
+        website: getFieldValue('profileWebsite') || '',
+        location: getFieldValue('profileLocation') || '',
+        birth_date: getFieldValue('profileBirthDate') || '',
+        gender: getFieldValue('profileGender') || '',
+        email_notifications: getCheckboxValue('emailNotifications'),
+        sms_notifications: getCheckboxValue('smsNotifications'),
+        marketing_emails: getCheckboxValue('marketingEmails')
+    };
+}
+
+// Handle avatar upload
+async function handleAvatarUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Validate file
+    if (file.size > 5 * 1024 * 1024) {
+        showMessage('File size should be less than 5MB', 'error');
+        event.target.value = '';
+        return;
+    }
+    
+    if (!file.type.startsWith('image/')) {
+        showMessage('Please select a valid image file', 'error');
+        event.target.value = '';
+        return;
+    }
+    
+    const avatarImg = document.getElementById('profileAvatarImg');
+    const originalSrc = avatarImg ? avatarImg.src : '';
+    
+    try {
+        if (avatarImg) avatarImg.style.opacity = '0.5';
+        
+        const formData = new FormData();
+        formData.append('avatar', file);
+        
+        const response = await fetch('/api/profile/avatar/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (data.status === 'success') {
+            if (avatarImg) {
+                avatarImg.src = data.avatar_url + '?t=' + new Date().getTime();
+            }
+            showMessage('Avatar uploaded successfully!', 'success');
+        } else {
+            showMessage(data.message || 'Failed to upload avatar', 'error');
+            if (avatarImg) avatarImg.src = originalSrc;
+        }
+        
+    } catch (error) {
+        console.error('Error uploading avatar:', error);
+        showMessage('Error uploading avatar. Please try again.', 'error');
+        if (avatarImg) avatarImg.src = originalSrc;
+    } finally {
+        if (avatarImg) avatarImg.style.opacity = '1';
+        event.target.value = '';
+    }
+}
+
+// Real-time display updates
+function updateDisplayName() {
+    const name = getFieldValue('profileName');
+    setTextContent('displayUserName', name || 'User');
+}
+
+function updateDisplayEmail() {
+    const email = getFieldValue('profileEmail');
+    setTextContent('displayUserEmail', email || 'user@example.com');
+}
+
+// Form validation
+function validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function validatePhone(phone) {
+    if (!phone) return true; // Optional field
+    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
+    return phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''));
+}
+
+// Initialize profile form
+function initializeProfileForm() {
+    // Add event listeners for real-time updates
+    const nameField = document.getElementById('profileName');
+    const emailField = document.getElementById('profileEmail');
+    const phoneField = document.getElementById('profileContact');
+    
+    if (nameField) {
+        nameField.addEventListener('input', updateDisplayName);
+    }
+    
+    if (emailField) {
+        emailField.addEventListener('input', updateDisplayEmail);
+        emailField.addEventListener('blur', function() {
+            const email = this.value.trim();
+            if (email && !validateEmail(email)) {
+                showMessage('Please enter a valid email address', 'error');
+            }
+        });
+    }
+    
+    if (phoneField) {
+        phoneField.addEventListener('blur', function() {
+            const phone = this.value.trim();
+            if (phone && !validatePhone(phone)) {
+                showMessage('Please enter a valid phone number', 'error');
+            }
+        });
+    }
+    
+    console.log('Profile form initialized');
+}
+
+// Profile sidebar functions
+function openProfileSidebar() {
+    const profileBoard = document.getElementById('profileBoard');
+    const overlay = document.getElementById('overlay');
+    const dropdown = document.getElementById('profileDropdown');
+    
+    if (profileBoard) profileBoard.classList.add('active');
+    if (overlay) overlay.classList.add('active');
+    if (dropdown) dropdown.classList.remove('active');
+    
+    // Close other panels
+    const chatBoard = document.getElementById('chatBoard');
+    if (chatBoard) chatBoard.classList.remove('active');
+    
+    // Load fresh profile data
+    loadUserProfile();
+}
+
+function closeProfileSidebar() {
+    const profileBoard = document.getElementById('profileBoard');
+    const overlay = document.getElementById('overlay');
+    
+    if (profileBoard) profileBoard.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+}
+
+function toggleProfile() {
+    const dropdown = document.getElementById('profileDropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('active');
+    }
+}
+
+// Utility functions
+function setFieldValue(fieldId, value) {
+    const field = document.getElementById(fieldId);
+    if (field) {
+        field.value = value || '';
+    }
+}
+
+function getFieldValue(fieldId) {
+    const field = document.getElementById(fieldId);
+    return field ? field.value.trim() : '';
+}
+
+function setCheckboxValue(fieldId, value) {
+    const field = document.getElementById(fieldId);
+    if (field) {
+        field.checked = Boolean(value);
+    }
+}
+
+function getCheckboxValue(fieldId) {
+    const field = document.getElementById(fieldId);
+    return field ? field.checked : false;
+}
+
+function setTextContent(elementId, text) {
+    const element = document.getElementById(elementId);
+    if (element) {
+        element.textContent = text;
+    }
+}
+
+// Message display functions
+function showMessage(message, type = 'info') {
+    removeMessages();
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `profile-message ${type}`;
+    
+    const styles = {
+        success: 'background: #d4edda; color: #155724; border: 1px solid #c3e6cb;',
+        error: 'background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;',
+        info: 'background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb;'
+    };
+    
+    const icons = {
+        success: '✅',
+        error: '❌',
+        info: 'ℹ️'
+    };
+    
+    messageDiv.innerHTML = `
+        <div style="${styles[type]} padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+            ${icons[type]} ${message}
+        </div>
+    `;
+    
+    const form = document.querySelector('.profile-form');
+    if (form) {
+        form.insertBefore(messageDiv, form.firstChild);
+        
+        // Auto remove after delay
+        const delay = type === 'error' ? 5000 : 3000;
+        setTimeout(() => {
+            if (messageDiv.parentNode) {
+                messageDiv.remove();
+            }
+        }, delay);
+    }
+}
+
+function removeMessages() {
+    const messages = document.querySelectorAll('.profile-message');
+    messages.forEach(msg => {
+        if (msg.parentNode) {
+            msg.remove();
+        }
+    });
+}
+
+// CSRF token function
+function getCsrfToken() {
+    // Try meta tag first
+    const metaTag = document.querySelector('meta[name=csrf-token]');
+    if (metaTag) {
+        return metaTag.getAttribute('content');
+    }
+    
+    // Try form input
+    const csrfInput = document.querySelector('[name=csrfmiddlewaretoken]');
+    if (csrfInput) {
+        return csrfInput.value;
+    }
+    
+    // Try cookie
+    return getCookie('csrftoken');
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    initializeProfileForm();
+    loadUserProfile();
+    console.log('Profile system initialized');
+});
+
+// Export functions for global use
+window.profileManager = {
+    loadUserProfile,
+    saveProfile,
+    handleAvatarUpload,
+    openProfileSidebar,
+    closeProfileSidebar,
+    toggleProfile
+};
+
+
+{% comment %} // Chat functionality
+let chatVisible = false; // Should start as false (hidden)
+
+function toggleChat() {
+    const chatBoard = document.getElementById('chatBoard');
+    chatBoard.classList.toggle('active');
+
+    if (!chatBoard) {
+        console.error('Chat board element not found!');
+        return;
+    }
+    
+    chatVisible = !chatVisible;
+    
+    if (chatVisible) {
+        // Show the chat
+        chatBoard.style.display = 'flex'; // Use flex instead of block
+        chatBoard.style.animation = 'slideUp 0.3s ease-out';
+        
+        // Focus on input when chat opens
+        setTimeout(() => {
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.focus();
+            }
+        }, 300);
+    } else {
+        // Hide the chat
+        chatBoard.style.animation = 'slideDown 0.3s ease-in';
+        setTimeout(() => {
+            chatBoard.style.display = 'none';
+        }, 300);
+    }
+}
+
+function handleEnter(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        sendMessage();
+    }
+}
+
+async function sendMessage() {
+    const chatInput = document.getElementById('chatInput');
+    const message = chatInput.value.trim();
+    
+    if (!message) return;
+    
+    // Add user message to chat
+    addMessageToChat(message, 'user');
+    
+    // Clear input
+    chatInput.value = '';
+    
+    // Show typing indicator
+    showTypingIndicator();
+    
+    try {
+        // Send message to chatbot
+        const response = await fetch('/api/chat/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                message: message
+            })
+        });
+        
+        const data = await response.json();
+        
+        // Remove typing indicator
+        removeTypingIndicator();
+        
+        if (data.status === 'success') {
+            // Add bot response to chat
+            addMessageToChat(data.bot_response, 'bot');
+        } else {
+            // Add error message
+            addMessageToChat('Sorry, I encountered an error. Please try again.', 'bot', true);
+        }
+        
+    } catch (error) {
+        console.error('Chat error:', error);
+        removeTypingIndicator();
+        addMessageToChat('Sorry, I\'m having trouble connecting. Please try again later.', 'bot', true);
+    }
+}
+
+function addMessageToChat(message, sender, isError = false) {
+    const chatMessages = document.getElementById('chatMessages');
+    
+    // Remove welcome message if it exists
+    const welcomeMsg = chatMessages.querySelector('div[style*="text-align: center"]');
+    if (welcomeMsg) {
+        welcomeMsg.remove();
+    }
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}-message${isError ? ' error' : ''}`;
+    
+    const timestamp = new Date().toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    
+    if (sender === 'user') {
+        messageDiv.innerHTML = `
+            <div class="message-content">
+                <div class="message-text">${escapeHtml(message)}</div>
+                <div class="message-time">${timestamp}</div>
+            </div>
+            <div class="message-avatar">👤</div>
+        `;
+    } else {
+        // Process bot message for markdown-style formatting
+        const formattedMessage = formatBotMessage(message);
+        messageDiv.innerHTML = `
+            <div class="message-avatar">🤖</div>
+            <div class="message-content">
+                <div class="message-text">${formattedMessage}</div>
+                <div class="message-time">${timestamp}</div>
+            </div>
+        `;
+    }
+    
+    chatMessages.appendChild(messageDiv);
+    
+    // Scroll to bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Add animation
+    messageDiv.style.opacity = '0';
+    messageDiv.style.transform = 'translateY(20px)';
+    
+    requestAnimationFrame(() => {
+        messageDiv.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        messageDiv.style.opacity = '1';
+        messageDiv.style.transform = 'translateY(0)';
+    });
+}
+
+function formatBotMessage(message) {
+    // Convert markdown-style formatting to HTML
+    let formatted = escapeHtml(message);
+    
+    // Bold text **text**
+    formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Line breaks
+    formatted = formatted.replace(/\n/g, '<br>');
+    
+    // Bullet points
+    formatted = formatted.replace(/^• /gm, '<span class="bullet">•</span> ');
+    
+    return formatted;
+}
+
+function showTypingIndicator() {
+    const chatMessages = document.getElementById('chatMessages');
+    
+    const typingDiv = document.createElement('div');
+    typingDiv.className = 'chat-message bot-message typing-indicator';
+    typingDiv.id = 'typingIndicator';
+    
+    typingDiv.innerHTML = `
+        <div class="message-avatar">🤖</div>
+        <div class="message-content">
+            <div class="message-text">
+                <div class="typing-dots">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    chatMessages.appendChild(typingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function removeTypingIndicator() {
+    const typingIndicator = document.getElementById('typingIndicator');
+    if (typingIndicator) {
+        typingIndicator.remove();
+    }
+}
+
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
+}
+
+function getCsrfToken() {
+    // Get CSRF token from cookie or meta tag
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                     document.querySelector('meta[name=csrf-token]')?.getAttribute('content') ||
+                     getCookie('csrftoken');
+    return csrfToken;
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Initialize chat with welcome message
+document.addEventListener('DOMContentLoaded', function() {
+    // Add welcome message when chat is first opened
+    const originalToggleChat = toggleChat;
+    let chatInitialized = false;
+    
+    window.toggleChat = function() {
+        if (!chatInitialized && !chatVisible) {
+            chatInitialized = true;
+            setTimeout(() => {
+                addMessageToChat(
+                    "👋 Hi! I'm your TrendLine News Assistant. Ask me about trending news, sports updates, Bollywood gossip, or any specific topic you're interested in!",
+                    'bot'
+                );
+            }, 500);
+        }
+        originalToggleChat();
+    };
+    
+    // Add sample quick actions
+    addQuickActions();
+});
+
+function addQuickActions() {
+    const chatMessages = document.getElementById('chatMessages');
+    const quickActions = document.createElement('div');
+    quickActions.className = 'quick-actions';
+    quickActions.innerHTML = `
+        <div class="quick-actions-title">Quick Actions:</div>
+        <button class="quick-btn" onclick="quickMessage('What\\'s trending?')">🔥 Trending</button>
+        <button class="quick-btn" onclick="quickMessage('Latest sports news')">⚽ Sports</button>
+        <button class="quick-btn" onclick="quickMessage('Bollywood updates')">🎬 Bollywood</button>
+        <button class="quick-btn" onclick="quickMessage('Technology news')">💻 Tech</button>
+    `;
+    
+    // Insert after welcome message
+    const welcomeMsg = chatMessages.querySelector('div[style*="text-align: center"]');
+    if (welcomeMsg) {
+        welcomeMsg.insertAdjacentElement('afterend', quickActions);
+    }
+}
+
+function quickMessage(message) {
+    document.getElementById('chatInput').value = message;
+    sendMessage();
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.profile-btn') && !e.target.closest('.profile-dropdown')) {
+        document.getElementById('profileDropdown').classList.remove('active');
+    }
+}); {% endcomment %}
+
+// Intersection Observer for lazy loading
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translateY(0)';
+        }
+    });
+});
+
+// 🔑 Dynamic news fetching
+function filterCategory(category) {
+    const tabs = document.querySelectorAll('.category-tab');
+    tabs.forEach(tab => tab.classList.remove('active'));
+    tabs.forEach(tab => {
+        if (tab.innerText.toLowerCase() === category || (category === 'all' && tab.innerText.toLowerCase().includes('all'))) {
+            tab.classList.add('active');
+        }
+    });
+     const cartoon = document.querySelector(".cartoon-container");
+    if (cartoon) cartoon.style.display = "none";
+
+    fetch(`/get-news/${category}/`)
+        .then(response => response.json())
+        .then(data => {
+            const grid = document.getElementById("newsGrid");
+            grid.innerHTML = "";
+
+            if (data.articles && data.articles.length > 0) {
+                data.articles.forEach((article, index) => {
+                    const card = document.createElement("article");
+                    card.className = "news-card";
+                    card.style.animation = `cardSlideIn 0.6s ease-out ${index*0.1}s forwards`;
+
+                    const cardContent = `
+                        <div class="news-image">
+                            <img src="${article.urlToImage || 'https://via.placeholder.com/300x200'}" alt="News Image" style="width:100%;height:200px;object-fit:cover;">
+                        </div>
+                        <div class="news-content">
+                            <span class="news-category">${category.charAt(0).toUpperCase() + category.slice(1)}</span>
+                            <h3 class="news-title">${article.title || "No Title"}</h3>
+                            <p class="news-summary">${article.description || "No description available."}</p>
+                            <div class="news-meta">
+                                <span>📅 ${new Date(article.publishedAt).toLocaleString()}</span>
+                                <span>👁️ ${article.source.name || "Unknown"}</span>
+                            </div>
+                            <a href="${article.url}" target="_blank" class="read-more">Read More</a>
+                        </div>
+                    `;
+                    card.innerHTML = cardContent;
+                    grid.appendChild(card);
+                    observer.observe(card);
+                });
+            } else {
+                grid.innerHTML = `<p style="padding:1rem; text-align:center;">No news available for ${category}</p>`;
+            }
+        })
+        .catch(err => console.error("Error fetching news:", err));
+}
+
+// Load default news on page load
+//window.onload = () => filterCategory("all");
+document.addEventListener("DOMContentLoaded", function () {
+    const promptText = "📰 Select a category to explore today's top news...";
+    const promptElement = document.getElementById("newsPrompt");
+
+    let i = 0;
+    function typeEffect() {
+        if (i < promptText.length) {
+            promptElement.innerHTML += promptText.charAt(i);
+            i++;
+            setTimeout(typeEffect, 70); // typing speed
+        }
+    }
+    typeEffect();
+});
+
+function handleLogout() {
+    // Get CSRF token
+    const form = document.getElementById('logoutForm');
+    const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    if (csrfToken) {
+        form.submit();
+    } else {
+        console.error('CSRF token not found!');
+        // Fallback: reload page and try again
+        window.location.href = '/logout/';
+    }
+}
+
+    </script>
+</body>
+</html>
